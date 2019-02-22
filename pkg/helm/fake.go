@@ -94,7 +94,6 @@ func (c *FakeClient) InstallReleaseFromChart(chart *chart.Chart, ns string, opts
 	}
 
 	releaseName := c.Opts.instReq.Name
-	releaseDescription := c.Opts.instReq.Description
 
 	// Check to see if the release already exists.
 	rel, err := c.ReleaseStatus(releaseName, nil)
@@ -102,25 +101,8 @@ func (c *FakeClient) InstallReleaseFromChart(chart *chart.Chart, ns string, opts
 		return nil, errors.New("cannot re-use a name that is still in use")
 	}
 
-	mockOpts := &MockReleaseOptions{
-		Name:        releaseName,
-		Chart:       chart,
-		Config:      c.Opts.instReq.Values,
-		Namespace:   ns,
-		Description: releaseDescription,
-	}
-
-	release := ReleaseMock(mockOpts)
-
-	if c.RenderManifests {
-		if err := RenderReleaseMock(release, false); err != nil {
-			return nil, err
-		}
-	}
-
-	if !c.Opts.dryRun {
-		c.Rels = append(c.Rels, release)
-	}
+	release := ReleaseMock(&MockReleaseOptions{Name: releaseName, Namespace: ns})
+	c.Rels = append(c.Rels, release)
 
 	return &rls.InstallReleaseResponse{
 		Release: release,
