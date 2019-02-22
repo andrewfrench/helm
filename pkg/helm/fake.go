@@ -139,43 +139,13 @@ func (c *FakeClient) UpdateRelease(rlsName string, chStr string, opts ...UpdateO
 
 // UpdateReleaseFromChart returns an UpdateReleaseResponse containing the updated release, if it exists
 func (c *FakeClient) UpdateReleaseFromChart(rlsName string, newChart *chart.Chart, opts ...UpdateOption) (*rls.UpdateReleaseResponse, error) {
-	for _, opt := range opts {
-		opt(&c.Opts)
-	}
 	// Check to see if the release already exists.
 	rel, err := c.ReleaseContent(rlsName, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	mockOpts := &MockReleaseOptions{
-		Name:        rel.Release.Name,
-		Version:     rel.Release.Version + 1,
-		Chart:       newChart,
-		Config:      c.Opts.updateReq.Values,
-		Namespace:   rel.Release.Namespace,
-		Description: c.Opts.updateReq.Description,
-	}
-
-	newRelease := ReleaseMock(mockOpts)
-
-	if c.Opts.updateReq.ResetValues {
-		newRelease.Config = &chart.Config{Raw: "{}"}
-	} else if c.Opts.updateReq.ReuseValues {
-		// TODO: This should merge old and new values but does not.
-	}
-
-	if c.RenderManifests {
-		if err := RenderReleaseMock(newRelease, true); err != nil {
-			return nil, err
-		}
-	}
-
-	if !c.Opts.dryRun {
-		*rel.Release = *newRelease
-	}
-
-	return &rls.UpdateReleaseResponse{Release: newRelease}, nil
+	return &rls.UpdateReleaseResponse{Release: rel.Release}, nil
 }
 
 // RollbackRelease returns nil, nil
